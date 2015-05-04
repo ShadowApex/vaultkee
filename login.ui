@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>VaultKee Login</string>
   </property>
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
@@ -151,7 +151,7 @@
    </property>
    <item>
     <property name="text">
-     <string>https://vault.example.com:8200</string>
+     <string>https://vault.example.com:8200/v1/</string>
     </property>
    </item>
   </widget>
