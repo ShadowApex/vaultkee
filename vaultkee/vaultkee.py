@@ -8,7 +8,7 @@ from core import config
 class MainWindow(QtGui.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
-        uic.loadUi('main.ui', self)
+        uic.loadUi('ui/main.ui', self)
         self.config = config.load_config()
         self.login_dialog = Login(parent=self)
 
@@ -20,7 +20,7 @@ class MainWindow(QtGui.QMainWindow):
 class Login(QtGui.QDialog):
     def __init__(self, parent=None):
         super(Login, self).__init__(parent)
-        uic.loadUi('login.ui', self)
+        uic.loadUi('ui/login.ui', self)
         self.buttonBox.accepted.connect(self.ok_clicked)
 
         # Load our settings if they were defined
