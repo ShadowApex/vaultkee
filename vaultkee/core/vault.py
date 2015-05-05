@@ -28,6 +28,13 @@ def get_mounts(url, token):
     contents = get(url, '/sys/mounts', token)
     return contents
 
+def get_listings(url):
+    response = urllib2.urlopen(str(url))
+    contents = response.read()
+    data = json.loads(contents)
+
+    return data
+
 
 if __name__ == "__main__":
     get_mounts("http://127.0.0.1:8200/v1/", "ea75ca7f-0b8f-d618-83e7-6cfac18de178")

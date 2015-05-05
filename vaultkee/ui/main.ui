@@ -98,16 +98,6 @@
         <string>Paths</string>
        </property>
       </column>
-      <item>
-       <property name="text">
-        <string>Internet</string>
-       </property>
-       <item>
-        <property name="text">
-         <string>Item</string>
-        </property>
-       </item>
-      </item>
      </widget>
     </item>
    </layout>
