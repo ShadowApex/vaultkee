@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 config = ConfigParser()
 config.read("settings.conf")
-LOGICAL_DIR = config.get("VaultKeeLs", "logical_path")
+LOGICAL_DIR = config.get("VaultDiscover", "logical_path")
 
 def explore(rootdir):
     """

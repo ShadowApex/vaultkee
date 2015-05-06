@@ -6,6 +6,9 @@ from PyQt4 import QtGui, uic
 from core import vault
 from core import config
 
+# Whether or not to cache all secrets for faster UI response.
+SECRET_CACHING = False
+
 class MainWindow(QtGui.QMainWindow):
     """The main window to display after connecting to a Vault server.
 
@@ -20,7 +23,7 @@ class MainWindow(QtGui.QMainWindow):
         self.login_dialog = Login(parent=self)
         self.statusBar().showMessage('Ready')
 
-        # Bind our actions
+        # Bind our actions such as exit, refresh, connect, etc.
         self.actionExit.triggered.connect(sys.exit)
         self.actionRefresh.triggered.connect(self.refresh)
         self.actionConnect.triggered.connect(self.login_dialog.show)
@@ -40,8 +43,43 @@ class MainWindow(QtGui.QMainWindow):
         objects_viewer = self.objectsViewer
         selected_row = objects_viewer.currentRow()
         selected_column = objects_viewer.currentColumn()
-        #print selected_row
-        #print dir(objects_viewer)
+
+        try:
+            object_text = objects_viewer.item(selected_column, selected_row).text()
+        except AttributeError:
+            object_text = ""
+        self.titleLabel.setText(object_text)
+
+        if not object_text:
+            self.secretTableWidget.setRowCount(0)
+            return
+
+        # Fetch data about the selected secret
+        item_path = '/'.join(self.selected_path) + '/' + str(object_text)
+        item_path = item_path.replace('//', '/')
+
+        if SECRET_CACHING:
+            secret = self.secrets[item_path]
+        else:
+            secret = vault.read_secret(self.server_url, self.token, item_path)
+
+        # Populate our secret viewer in the bottom of the main window.
+        unhide_data = ("comment", "url", "ip")
+        self.secretTableWidget.setRowCount(len(secret['data'].keys()))
+        i = 0
+        for key, value in secret['data'].items():
+            # Set the key
+            self.secretTableWidget.setItem(i, 0, QtGui.QTableWidgetItem(key))
+
+            # Set the value if it's not sensitive data.
+            if key.lower() in unhide_data:
+                self.secretTableWidget.setItem(i, 1, QtGui.QTableWidgetItem(value))
+            else:
+                self.secretTableWidget.setItem(i, 1, QtGui.QTableWidgetItem("***************"))
+
+            i += 1
+
+        self.secretTableWidget.resizeColumnsToContents()
 
 
     def refresh_objects(self):
@@ -71,15 +109,15 @@ class MainWindow(QtGui.QMainWindow):
             self.objectsViewer.setItem(i, 0, QtGui.QTableWidgetItem(text))
 
             # Fetch some data about the available secrets.
-            secret = self.secrets[item_path]
-            if 'username' in secret['data']:
-                self.objectsViewer.setItem(i, 1, QtGui.QTableWidgetItem(secret['data']['username']))
-            if 'url' in secret['data']:
-                self.objectsViewer.setItem(i, 2, QtGui.QTableWidgetItem(secret['data']['url']))
-            if 'password' in secret['data']:
-                self.objectsViewer.setItem(i, 3, QtGui.QTableWidgetItem("***************"))
-            if 'comment' in secret['data']:
-                self.objectsViewer.setItem(i, 4, QtGui.QTableWidgetItem(secret['data']['comment']))
+            #secret = self.secrets[item_path]
+            #if 'username' in secret['data']:
+            #    self.objectsViewer.setItem(i, 1, QtGui.QTableWidgetItem(secret['data']['username']))
+            #if 'url' in secret['data']:
+            #    self.objectsViewer.setItem(i, 2, QtGui.QTableWidgetItem(secret['data']['url']))
+            #if 'password' in secret['data']:
+            #    self.objectsViewer.setItem(i, 3, QtGui.QTableWidgetItem("***************"))
+            #if 'comment' in secret['data']:
+            #    self.objectsViewer.setItem(i, 4, QtGui.QTableWidgetItem(secret['data']['comment']))
 
         self.objectsViewer.resizeColumnsToContents()
 

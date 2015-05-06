@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>945</width>
-    <height>603</height>
+    <width>1213</width>
+    <height>769</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,50 +18,104 @@
     <item row="0" column="1">
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <layout class="QVBoxLayout" name="objectViewLayout" stretch="10,5">
+       <layout class="QVBoxLayout" name="objectViewLayout" stretch="10,11">
         <item>
          <widget class="QTableWidget" name="objectsViewer">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="alternatingRowColors">
+           <bool>true</bool>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
           <property name="selectionBehavior">
            <enum>QAbstractItemView::SelectRows</enum>
           </property>
+          <property name="gridStyle">
+           <enum>Qt::SolidLine</enum>
+          </property>
+          <property name="sortingEnabled">
+           <bool>true</bool>
+          </property>
+          <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+           <bool>true</bool>
+          </attribute>
+          <attribute name="verticalHeaderVisible">
+           <bool>false</bool>
+          </attribute>
           <column>
            <property name="text">
-            <string>Title</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Username</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>URL</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Password</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string>Comments</string>
+            <string>Secret</string>
            </property>
           </column>
          </widget>
         </item>
         <item>
-         <widget class="QTabWidget" name="tabWidget">
+         <widget class="QTabWidget" name="secretTabWidget">
           <property name="currentIndex">
            <number>0</number>
           </property>
-          <widget class="QWidget" name="tab">
+          <widget class="QWidget" name="secretContentsTab">
            <attribute name="title">
             <string>Contents</string>
            </attribute>
+           <layout class="QGridLayout" name="gridLayout_2">
+            <item row="0" column="1">
+             <layout class="QVBoxLayout" name="verticalLayout">
+              <item>
+               <widget class="QLabel" name="titleLabel">
+                <property name="font">
+                 <font>
+                  <weight>75</weight>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="textInteractionFlags">
+                 <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QTableWidget" name="secretTableWidget">
+                <property name="alternatingRowColors">
+                 <bool>true</bool>
+                </property>
+                <property name="gridStyle">
+                 <enum>Qt::NoPen</enum>
+                </property>
+                <attribute name="horizontalHeaderVisible">
+                 <bool>true</bool>
+                </attribute>
+                <attribute name="verticalHeaderVisible">
+                 <bool>false</bool>
+                </attribute>
+                <row>
+                 <property name="text">
+                  <string/>
+                 </property>
+                </row>
+                <column>
+                 <property name="text">
+                  <string>Key</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>Value</string>
+                 </property>
+                </column>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
           </widget>
-          <widget class="QWidget" name="tab_2">
+          <widget class="QWidget" name="secretPropertiesTab">
            <attribute name="title">
             <string>Properties</string>
            </attribute>
@@ -88,7 +142,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>945</width>
+     <width>1213</width>
      <height>25</height>
     </rect>
    </property>
