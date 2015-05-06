@@ -18,14 +18,12 @@
     <item row="0" column="1">
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <layout class="QVBoxLayout" name="objectViewLayout" stretch="10,4">
+       <layout class="QVBoxLayout" name="objectViewLayout" stretch="10,5">
         <item>
          <widget class="QTableWidget" name="objectsViewer">
-          <row>
-           <property name="text">
-            <string>1</string>
-           </property>
-          </row>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
           <column>
            <property name="text">
             <string>Title</string>
@@ -51,40 +49,23 @@
             <string>Comments</string>
            </property>
           </column>
-          <item row="0" column="0">
-           <property name="text">
-            <string>asd</string>
-           </property>
-          </item>
-          <item row="0" column="1">
-           <property name="text">
-            <string>asd</string>
-           </property>
-          </item>
-          <item row="0" column="2">
-           <property name="text">
-            <string>asd</string>
-           </property>
-          </item>
-          <item row="0" column="3">
-           <property name="text">
-            <string>asd</string>
-           </property>
-          </item>
-          <item row="0" column="4">
-           <property name="text">
-            <string>asd</string>
-           </property>
-          </item>
          </widget>
         </item>
         <item>
-         <widget class="QTableWidget" name="objectViewer">
-          <column>
-           <property name="text">
-            <string>Path</string>
-           </property>
-          </column>
+         <widget class="QTabWidget" name="tabWidget">
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="tab">
+           <attribute name="title">
+            <string>Contents</string>
+           </attribute>
+          </widget>
+          <widget class="QWidget" name="tab_2">
+           <attribute name="title">
+            <string>Properties</string>
+           </attribute>
+          </widget>
          </widget>
         </item>
        </layout>
@@ -131,7 +112,29 @@
     <string/>
    </property>
   </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionConnect"/>
+   <addaction name="actionSave"/>
+   <addaction name="actionRefresh"/>
+   <addaction name="actionExit"/>
+   <addaction name="separator"/>
+   <addaction name="actionAdd"/>
+   <addaction name="actionRemove"/>
+  </widget>
   <action name="actionExit">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/exit.png</normaloff>../resources/exit.png</iconset>
+   </property>
    <property name="text">
     <string>Exit</string>
    </property>
@@ -141,7 +144,66 @@
     <string>New...</string>
    </property>
   </action>
+  <action name="actionRefresh">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/refresh.png</normaloff>../resources/refresh.png</iconset>
+   </property>
+   <property name="text">
+    <string>Refresh</string>
+   </property>
+  </action>
+  <action name="actionConnect">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/connect.png</normaloff>../resources/connect.png</iconset>
+   </property>
+   <property name="text">
+    <string>Connect</string>
+   </property>
+   <property name="toolTip">
+    <string>Connect</string>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/save.png</normaloff>../resources/save.png</iconset>
+   </property>
+   <property name="text">
+    <string>Save</string>
+   </property>
+   <property name="toolTip">
+    <string>Save</string>
+   </property>
+  </action>
+  <action name="actionAdd">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/add.png</normaloff>../resources/add.png</iconset>
+   </property>
+   <property name="text">
+    <string>Add</string>
+   </property>
+   <property name="toolTip">
+    <string>Add</string>
+   </property>
+  </action>
+  <action name="actionRemove">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/delete.png</normaloff>../resources/delete.png</iconset>
+   </property>
+   <property name="text">
+    <string>Remove</string>
+   </property>
+   <property name="toolTip">
+    <string>Remove</string>
+   </property>
+  </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="../resources/images.qrc"/>
+ </resources>
  <connections/>
 </ui>
