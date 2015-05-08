@@ -38,30 +38,44 @@ class MainWindow(QtGui.QMainWindow):
         objectsModel = self.objectsViewer.selectionModel()
         objectsModel.selectionChanged.connect(self.update_object_viewer)
 
+        # Handle our secret viewer being selected.
+        self.secretTableWidget.doubleClicked.connect(self.update_secret_viewer_selection)
 
-    def update_object_viewer(self):
-        objects_viewer = self.objectsViewer
-        selected_row = objects_viewer.currentRow()
-        selected_column = objects_viewer.currentColumn()
 
-        try:
-            object_text = objects_viewer.item(selected_column, selected_row).text()
-        except AttributeError:
-            object_text = ""
-        self.titleLabel.setText(object_text)
-
-        if not object_text:
-            self.secretTableWidget.setRowCount(0)
-            return
+    def update_secret_viewer_selection(self):
+        """If the user double clicks a field in the secret viewer, unmask it.
+        """
+        secret_viewer = self.secretTableWidget
+        selected_row = secret_viewer.currentRow()
+        selected_column = secret_viewer.currentColumn()
 
         # Fetch data about the selected secret
-        item_path = '/'.join(self.selected_path) + '/' + str(object_text)
-        item_path = item_path.replace('//', '/')
+        secret_name = self.get_secret_name_from_selection()
+        secret = self.fetch_secret(self.selected_path, secret_name)
 
-        if SECRET_CACHING:
-            secret = self.secrets[item_path]
-        else:
-            secret = vault.read_secret(self.server_url, self.token, item_path)
+        try:
+            property_name = str(secret_viewer.item(selected_row, 0).text())
+        except AttributeError:
+            property_name = ""
+
+        cb = QtGui.QApplication.clipboard()
+        cb.clear(mode=cb.Clipboard)
+        cb.setText(secret['data'][property_name], mode=cb.Clipboard)
+
+        self.statusBar().showMessage('Copied %s to clipboard' % property_name)
+
+
+    def update_object_viewer(self):
+        """Updates the secret viewer on the bottom of the screen with details
+        about the currently selected secret
+        """
+        secret_name = self.get_secret_name_from_selection()
+        self.titleLabel.setText(secret_name)
+
+        # Fetch data about the selected secret
+        secret = self.fetch_secret(self.selected_path, secret_name)
+        if 'data' not in secret:
+            return
 
         # Populate our secret viewer in the bottom of the main window.
         unhide_data = ("comment", "url", "ip")
@@ -108,21 +122,10 @@ class MainWindow(QtGui.QMainWindow):
             text = item[1:]
             self.objectsViewer.setItem(i, 0, QtGui.QTableWidgetItem(text))
 
-            # Fetch some data about the available secrets.
-            #secret = self.secrets[item_path]
-            #if 'username' in secret['data']:
-            #    self.objectsViewer.setItem(i, 1, QtGui.QTableWidgetItem(secret['data']['username']))
-            #if 'url' in secret['data']:
-            #    self.objectsViewer.setItem(i, 2, QtGui.QTableWidgetItem(secret['data']['url']))
-            #if 'password' in secret['data']:
-            #    self.objectsViewer.setItem(i, 3, QtGui.QTableWidgetItem("***************"))
-            #if 'comment' in secret['data']:
-            #    self.objectsViewer.setItem(i, 4, QtGui.QTableWidgetItem(secret['data']['comment']))
-
         self.objectsViewer.resizeColumnsToContents()
 
 
-    def path_tree_parents(self, item):
+    def path_tree_parents(self, tree_widget):
         """Updates the 'self.selected_path' attribute with the given item's
         parents.
 
@@ -130,7 +133,7 @@ class MainWindow(QtGui.QMainWindow):
           item (QtGui.QTreeWidgetItem): A tree widget item to get the parents of.
 
         """
-        parent = item.parent()
+        parent = tree_widget.parent()
         if parent:
             self.selected_path.insert(0, str(parent.text(0)))
             self.path_tree_parents(parent)
@@ -156,6 +159,48 @@ class MainWindow(QtGui.QMainWindow):
             self.secrets[item] = secret
 
         self.statusBar().showMessage('Ready')
+
+
+    def fetch_secret(self, selected_path, item):
+        """Fetches a single secret from vault given the currently selected path and
+        secret name.
+
+        Args:
+          selected_path (list): Top-level path to the secret, e.g. ['secret', 'servers']
+          item (str): The name of the secret to fetch, e.g. "web01"
+
+        Returns:
+          A dictionary of the fetched secret.
+
+        """
+        # Fetch data about the selected secret
+        item_path = join_path(selected_path, item)
+
+        if SECRET_CACHING:
+            secret = self.secrets[item_path]
+        else:
+            secret = vault.read_secret(self.server_url, self.token, item_path)
+
+        return secret
+
+
+    def get_secret_name_from_selection(self):
+        """Gets the name of the secret selected in the objects viewer.
+        """
+        objects_viewer = self.objectsViewer
+        selected_row = objects_viewer.currentRow()
+        selected_column = objects_viewer.currentColumn()
+
+        try:
+            secret_name = objects_viewer.item(selected_column, selected_row).text()
+        except AttributeError:
+            secret_name = ""
+
+        # If our secret name is blank, remove all our rows from our secret viewer.
+        if not secret_name:
+            self.secretTableWidget.setRowCount(0)
+
+        return secret_name
 
 
     def refresh(self):
@@ -240,6 +285,14 @@ def find_key(d, key):
                 return [k] + p
         elif k == key:
             return [k]
+
+def join_path(selected_path, path):
+    """Combines a list of paths to a single '/' separated string.
+    """
+    item_path = '/'.join(selected_path) + '/' + str(path)
+    item_path = item_path.replace('//', '/')
+
+    return item_path
 
 
 
