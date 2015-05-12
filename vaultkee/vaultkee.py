@@ -145,6 +145,8 @@ class MainWindow(QtGui.QMainWindow):
         # Get all the items in this path from our listings dictionary
         self.listings = vault.get_listings(self.listing_url)
         objects = getFromDict(self.listings, self.selected_path[1:])
+        if not objects:
+            return
 
         # Update our table with available keys in the selected path.
         available_items = []
@@ -304,6 +306,7 @@ class Login(QtGui.QDialog):
                            parent.listing_url,
                            parent.server_url,
                            parent.token)
+        parent.secret_dialog.populate_paths()
 
 
 class Secret(QtGui.QDialog):
@@ -319,7 +322,6 @@ class Secret(QtGui.QDialog):
 
         self.addButton.clicked.connect(self.add_row)
         self.buttonBox.accepted.connect(self.save_selected)
-        self.populate_paths()
 
 
     def add_row(self):
@@ -400,6 +402,8 @@ class Secret(QtGui.QDialog):
         parent = self.parent()
         listings = vault.get_listings(parent.config.get('VaultKee',
                                                         'listing_url'))
+        if not listings:
+            return
         for key in listings:
             if listings[key]:
                 self.pathBox.addItems(['secret/' + key])
@@ -513,6 +517,8 @@ def build_paths_tree(d, parent):
       parent (QtGui.QTreeWidgetItem): The top-level parent of the path tree.
 
     """
+    if not d:
+        return
     for k, v in d.iteritems():
         child = QtGui.QTreeWidgetItem()
         child.setText(0, k)
