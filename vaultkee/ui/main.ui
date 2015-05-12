@@ -156,10 +156,21 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionNew"/>
+    <addaction name="actionConnect"/>
+    <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
+   <widget class="QMenu" name="menuSecret">
+    <property name="title">
+     <string>Secret</string>
+    </property>
+    <addaction name="actionClone"/>
+    <addaction name="separator"/>
+    <addaction name="actionAdd"/>
+    <addaction name="actionRemove"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuSecret"/>
   </widget>
   <widget class="QStatusBar" name="statusbar">
    <property name="enabled">
@@ -187,6 +198,7 @@
    <addaction name="actionRefresh"/>
    <addaction name="actionExit"/>
    <addaction name="separator"/>
+   <addaction name="actionClone"/>
    <addaction name="actionAdd"/>
    <addaction name="actionRemove"/>
   </widget>
@@ -196,7 +208,7 @@
      <normaloff>../resources/exit.png</normaloff>../resources/exit.png</iconset>
    </property>
    <property name="text">
-    <string>Exit</string>
+    <string>E&amp;xit</string>
    </property>
   </action>
   <action name="actionNew">
@@ -212,6 +224,9 @@
    <property name="text">
     <string>Refresh</string>
    </property>
+   <property name="shortcut">
+    <string>F5</string>
+   </property>
   </action>
   <action name="actionConnect">
    <property name="icon">
@@ -219,10 +234,13 @@
      <normaloff>../resources/connect.png</normaloff>../resources/connect.png</iconset>
    </property>
    <property name="text">
-    <string>Connect</string>
+    <string>&amp;Connect...</string>
    </property>
    <property name="toolTip">
     <string>Connect</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+X</string>
    </property>
   </action>
   <action name="actionSave">
@@ -236,6 +254,9 @@
    <property name="toolTip">
     <string>Save</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
   </action>
   <action name="actionAdd">
    <property name="icon">
@@ -243,10 +264,13 @@
      <normaloff>../resources/add.png</normaloff>../resources/add.png</iconset>
    </property>
    <property name="text">
-    <string>Add</string>
+    <string>&amp;Add</string>
    </property>
    <property name="toolTip">
     <string>Add</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
    </property>
   </action>
   <action name="actionRemove">
@@ -255,10 +279,28 @@
      <normaloff>../resources/delete.png</normaloff>../resources/delete.png</iconset>
    </property>
    <property name="text">
-    <string>Remove</string>
+    <string>&amp;Remove</string>
    </property>
    <property name="toolTip">
     <string>Remove</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+D</string>
+   </property>
+  </action>
+  <action name="actionClone">
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/copy.png</normaloff>../resources/copy.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Clone</string>
+   </property>
+   <property name="toolTip">
+    <string>Clones the selected secret</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
    </property>
   </action>
  </widget>

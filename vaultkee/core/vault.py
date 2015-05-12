@@ -49,6 +49,13 @@ def write_secret(url, token, path, data):
     return data
 
 
+def delete_secret(url, token, path):
+    url = sanitize_url(url)
+    r = requests.delete(url + path, cookies={"token": token})
+
+    print r.__dict__
+
+
 def read_secret(url, token, path):
     url = sanitize_url(url)
     r = requests.get(url + path, cookies={"token": token})

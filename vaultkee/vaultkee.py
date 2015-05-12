@@ -21,12 +21,15 @@ class MainWindow(QtGui.QMainWindow):
         uic.loadUi('ui/main.ui', self)
         self.config = config.load_config()
         self.login_dialog = Login(parent=self)
+        self.secret_dialog = Secret(parent=self)
         self.statusBar().showMessage('Ready')
 
         # Bind our actions such as exit, refresh, connect, etc.
         self.actionExit.triggered.connect(sys.exit)
         self.actionRefresh.triggered.connect(self.refresh)
         self.actionConnect.triggered.connect(self.login_dialog.show)
+        self.actionAdd.triggered.connect(self.new_secret)
+        self.actionRemove.triggered.connect(self.delete_secret)
 
         # Handle our path tree being selected.
         self.pathTreeWidget.clicked.connect(self.refresh_objects)
@@ -37,9 +40,43 @@ class MainWindow(QtGui.QMainWindow):
         # Handle our objects viewer being selected.
         objectsModel = self.objectsViewer.selectionModel()
         objectsModel.selectionChanged.connect(self.update_object_viewer)
+        self.objectsViewer.doubleClicked.connect(self.edit_secret)
+        self.objectsViewer.clicked.connect(self.update_object_viewer)
 
         # Handle our secret viewer being selected.
         self.secretTableWidget.doubleClicked.connect(self.update_secret_viewer_selection)
+
+
+    def delete_secret(self):
+        secret_name = self.get_secret_name_from_selection()
+        secret_path = join_path(self.selected_path, secret_name)
+
+        print "Deleting selected secret: %s" % secret_path
+        vault.delete_secret(self.server_url, self.token, secret_path)
+        self.refresh()
+
+
+    def new_secret(self):
+        self.secret_dialog.empty_table()
+        self.secret_dialog.pathBox.setDisabled(0)
+        self.secret_dialog.nameLineEdit.setDisabled(0)
+        self.secret_dialog.show()
+
+
+    def edit_secret(self):
+        secret_viewer = self.secretTableWidget
+        selected_row = secret_viewer.currentRow()
+        selected_column = secret_viewer.currentColumn()
+
+        # Fetch data about the selected secret
+        secret_name = self.get_secret_name_from_selection()
+        secret = self.fetch_secret(self.selected_path, secret_name)
+
+        self.secret_dialog.populate_table(secret, self.selected_path, secret_name)
+        self.secret_dialog.pathBox.setDisabled(1)
+        self.secret_dialog.nameLineEdit.setDisabled(1)
+        
+        self.secret_dialog.show()
 
 
     def update_secret_viewer_selection(self):
@@ -204,7 +241,8 @@ class MainWindow(QtGui.QMainWindow):
 
 
     def refresh(self):
-        self.fetch_secrets()
+        if SECRET_CACHING:
+            self.fetch_secrets()
         self.refresh_objects()
 
 
@@ -258,13 +296,153 @@ class Login(QtGui.QDialog):
             config.save_config(parent.server_url, parent.listing_url, "", False)
 
         # Load all our secrets
-        parent.fetch_secrets()
+        if SECRET_CACHING:
+            parent.fetch_secrets()
 
         # Populate our main window with data from the server.
         populate_path_tree(parent.pathTreeWidget,
                            parent.listing_url,
                            parent.server_url,
                            parent.token)
+
+
+class Secret(QtGui.QDialog):
+    """The dialog used to add or modify secrets
+
+    Args:
+      parent (QtGui.QMainWindow): Parent of this window.
+
+    """
+    def __init__(self, parent=None):
+        super(Secret, self).__init__(parent)
+        uic.loadUi('ui/secret.ui', self)
+
+        self.addButton.clicked.connect(self.add_row)
+        self.buttonBox.accepted.connect(self.save_selected)
+        self.populate_paths()
+
+
+    def add_row(self):
+        table = self.tableWidget
+        table.setRowCount(table.rowCount() + 1)
+
+
+    def save_selected(self):
+        parent = self.parent()
+        print "Save clicked!"
+
+        # Only save if we validate our input
+        if not self.valid_input():
+            print "Error, input is invalid"
+            return False
+
+        # Format our data for saving
+        data = {}
+        for row in range(self.tableWidget.rowCount()):
+            try:
+                key = str(self.tableWidget.item(row, 0).text())
+            except AttributeError:
+                continue
+            try:
+                value = str(self.tableWidget.item(row, 1).text())
+            except AttributeError:
+                value = ""
+            data[key] = value
+
+        pprint(data)
+
+        # Get our path to save the data to
+        secret_name = str(self.nameLineEdit.text())
+        secret_path = str(self.pathBox.currentText())
+
+        save_path = join_path([secret_path], secret_name)
+        print "Saving %s to %s." % (data, save_path)
+
+        # Write our secret to the specified path
+        vault.write_secret(parent.server_url, parent.token, save_path, data)
+
+        # Update our tree view
+        populate_path_tree(parent.pathTreeWidget,
+                           parent.listing_url,
+                           parent.server_url,
+                           parent.token)
+
+        parent.refresh()
+
+
+    def valid_input(self):
+        secret_name = self.nameLineEdit.text()
+        secret_path = self.pathBox.currentText()
+
+        if not secret_name or not secret_path:
+            return False
+
+        if self.tableWidget.rowCount() < 1:
+            return False
+
+        for row in range(self.tableWidget.rowCount()):
+            try:
+                key = str(self.tableWidget.item(row, 0).text())
+            except AttributeError:
+                key = ""
+            try:
+                value = str(self.tableWidget.item(row, 1).text())
+            except AttributeError:
+                value = ""
+
+            if not key and value:
+                return False
+
+        return True
+
+
+    def populate_paths(self):
+        parent = self.parent()
+        listings = vault.get_listings(parent.config.get('VaultKee',
+                                                        'listing_url'))
+        for key in listings:
+            if listings[key]:
+                self.pathBox.addItems(['secret/' + key])
+
+
+    def empty_table(self):
+        table = self.tableWidget
+        table.setRowCount(0)
+        table.setRowCount(1)
+        self.nameLineEdit.setText("")
+
+
+    def populate_table(self, secret, secret_path, secret_name):
+        table = self.tableWidget
+        table.setRowCount(len(secret['data']))
+
+        i = 0
+        for key, value in secret['data'].items():
+            table.setItem(i, 0, QtGui.QTableWidgetItem(key))
+            table.setItem(i, 1, QtGui.QTableWidgetItem(value))
+            i += 1
+
+        # Get all the currently available paths
+        current_items = [self.pathBox.itemText(i) for i in range(self.pathBox.count())]
+
+        # Get the string path of the current item
+        secret_path = join_path(secret_path, "")
+        if secret_path.endswith('/'):
+            secret_path = secret_path[:-1]
+
+        # Loop through our current items and set our path
+        i = 0
+        path_found = False
+        for item in current_items:
+            if str(item) == secret_path:
+                path_found = True
+                self.pathBox.setCurrentIndex(i)
+            i += 1
+        if not path_found:
+            self.pathBox.addItems([secret_path])
+            self.pathBox.setCurrentIndex(len(current_items))
+
+        self.nameLineEdit.setText(secret_name)
 
 
 def extract(dict_in, dict_out):
