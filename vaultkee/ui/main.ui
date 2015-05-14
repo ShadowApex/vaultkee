@@ -198,8 +198,6 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionConnect"/>
-   <addaction name="actionSave"/>
-   <addaction name="actionRefresh"/>
    <addaction name="actionExit"/>
    <addaction name="separator"/>
    <addaction name="actionClone"/>
