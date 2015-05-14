@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>VaultKee</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../resources/icon_48.png</normaloff>../resources/icon_48.png</iconset>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout" columnstretch="40,100" columnminimumwidth="0,0">
     <item row="0" column="1">

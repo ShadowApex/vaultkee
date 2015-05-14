@@ -19,6 +19,7 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         uic.loadUi('ui/main.ui', self)
+        self.setWindowIcon(QtGui.QIcon('resources/icon.png'))
         self.config = config.load_config()
         self.login_dialog = Login(parent=self)
         self.secret_dialog = Secret(parent=self)
@@ -258,6 +259,7 @@ class Login(QtGui.QDialog):
     def __init__(self, parent=None):
         super(Login, self).__init__(parent)
         uic.loadUi('ui/login.ui', self)
+        self.setWindowIcon(QtGui.QIcon('resources/icon.png'))
         self.buttonBox.accepted.connect(self.ok_selected)
 
         # Load our settings if they were defined
@@ -319,6 +321,7 @@ class Secret(QtGui.QDialog):
     def __init__(self, parent=None):
         super(Secret, self).__init__(parent)
         uic.loadUi('ui/secret.ui', self)
+        self.setWindowIcon(QtGui.QIcon('resources/icon.png'))
 
         self.addButton.clicked.connect(self.add_row)
         self.buttonBox.accepted.connect(self.save_selected)

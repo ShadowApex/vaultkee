@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=0.1.2015.05.14
+Name=VaultKee
+Comment=VaultKee is a an open source frontend to Vault for use as a password manager
+Exec=/usr/local/sbin/vaultkee
+Icon=/usr/local/share/vaultkee/resources/icon_48.png
+Terminal=false
+Type=Application
+Categories=Utility;Application;
