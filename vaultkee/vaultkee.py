@@ -5,6 +5,9 @@ from pprint import pprint
 from PyQt4 import QtGui, uic
 from core import vault
 from core import config
+import os
+
+BASEDIR = os.path.dirname(os.path.realpath(sys.argv[0]))
 
 # Whether or not to cache all secrets for faster UI response.
 SECRET_CACHING = False
@@ -18,8 +21,8 @@ class MainWindow(QtGui.QMainWindow):
     """
     def __init__(self):
         super(MainWindow, self).__init__()
-        uic.loadUi('ui/main.ui', self)
-        self.setWindowIcon(QtGui.QIcon('resources/icon.png'))
+        uic.loadUi(BASEDIR + '/ui/main.ui', self)
+        self.setWindowIcon(QtGui.QIcon(BASEDIR + '/resources/icon.png'))
         self.config = config.load_config()
         self.login_dialog = Login(parent=self)
         self.secret_dialog = Secret(parent=self)
@@ -258,8 +261,8 @@ class Login(QtGui.QDialog):
     """
     def __init__(self, parent=None):
         super(Login, self).__init__(parent)
-        uic.loadUi('ui/login.ui', self)
-        self.setWindowIcon(QtGui.QIcon('resources/icon.png'))
+        uic.loadUi(BASEDIR + '/ui/login.ui', self)
+        self.setWindowIcon(QtGui.QIcon(BASEDIR + '/resources/icon.png'))
         self.buttonBox.accepted.connect(self.ok_selected)
 
         # Load our settings if they were defined
@@ -320,8 +323,8 @@ class Secret(QtGui.QDialog):
     """
     def __init__(self, parent=None):
         super(Secret, self).__init__(parent)
-        uic.loadUi('ui/secret.ui', self)
-        self.setWindowIcon(QtGui.QIcon('resources/icon.png'))
+        uic.loadUi(BASEDIR + '/ui/secret.ui', self)
+        self.setWindowIcon(QtGui.QIcon(BASEDIR + '/resources/icon.png'))
 
         self.addButton.clicked.connect(self.add_row)
         self.buttonBox.accepted.connect(self.save_selected)
@@ -560,8 +563,7 @@ def getFromDict(dataDict, mapList):
     return reduce(lambda d, k: d[k], mapList, dataDict)
 
 
-if __name__ == '__main__':
-    app = QtGui.QApplication(sys.argv)
-    window = MainWindow()
-    window.login_dialog.show()
-    sys.exit(app.exec_())
+app = QtGui.QApplication(sys.argv)
+window = MainWindow()
+window.login_dialog.show()
+sys.exit(app.exec_())
