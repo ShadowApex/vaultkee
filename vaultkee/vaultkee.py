@@ -6,6 +6,7 @@ from PyQt4 import QtGui, uic
 from core import vault
 from core import config
 import os
+import keyring
 
 BASEDIR = os.path.dirname(os.path.realpath(sys.argv[0]))
 
@@ -268,11 +269,14 @@ class Login(QtGui.QDialog):
         # Load our settings if they were defined
         url = self.parent().config.get('VaultKee', 'url')
         listing_url = self.parent().config.get('VaultKee', 'listing_url')
-        token = self.parent().config.get('VaultKee', 'token')
         saved = self.parent().config.getboolean('VaultKee', 'save')
+
         if url:
+            token = keyring.get_password("vaultkee", url)
             self.serverURLBox.addItems([url])
             self.serverURLBox.setCurrentIndex(1)
+        else:
+            token = ""
         if listing_url:
             self.listingURLBox.addItems([listing_url])
             self.listingURLBox.setCurrentIndex(1)
@@ -298,9 +302,10 @@ class Login(QtGui.QDialog):
 
         # Save our settings if requested
         if self.saveLoginCheckbox.checkState() > 0:
-            config.save_config(parent.server_url, parent.listing_url, parent.token, True)
+            config.save_config(parent.server_url, parent.listing_url, True)
+            keyring.set_password("vaultkee", str(parent.server_url), str(parent.token))
         else:
-            config.save_config(parent.server_url, parent.listing_url, "", False)
+            config.save_config(parent.server_url, parent.listing_url, False)
 
         # Load all our secrets
         if SECRET_CACHING:
