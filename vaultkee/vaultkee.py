@@ -10,9 +10,6 @@ import keyring
 
 BASEDIR = os.path.dirname(os.path.realpath(sys.argv[0]))
 
-# Whether or not to cache all secrets for faster UI response.
-SECRET_CACHING = False
-
 class MainWindow(QtGui.QMainWindow):
     """The main window to display after connecting to a Vault server.
 
@@ -183,28 +180,6 @@ class MainWindow(QtGui.QMainWindow):
             self.path_tree_parents(parent)
 
 
-    def fetch_secrets(self):
-        """Fetches all secrets from the vault server.
-        """
-        self.statusBar().showMessage('Refreshing...')
-        self.listings = vault.get_listings(self.listing_url)
-        self.flat_listings = []
-        self.secrets = {}
-        items = extract(self.listings, {})
-        for key in items:
-            secret_path = find_key(self.listings, key)
-            secret_path[-1] = secret_path[-1][1:]
-            secret_path.insert(0, 'secret')
-            secret_path = '/'.join(secret_path)
-            self.flat_listings.append(secret_path)
-
-        for item in self.flat_listings:
-            secret = vault.read_secret(self.server_url, self.token, item)
-            self.secrets[item] = secret
-
-        self.statusBar().showMessage('Ready')
-
-
     def fetch_secret(self, selected_path, item):
         """Fetches a single secret from vault given the currently selected path and
         secret name.
@@ -219,11 +194,7 @@ class MainWindow(QtGui.QMainWindow):
         """
         # Fetch data about the selected secret
         item_path = join_path(selected_path, item)
-
-        if SECRET_CACHING:
-            secret = self.secrets[item_path]
-        else:
-            secret = vault.read_secret(self.server_url, self.token, item_path)
+        secret = vault.read_secret(self.server_url, self.token, item_path)
 
         return secret
 
@@ -248,8 +219,6 @@ class MainWindow(QtGui.QMainWindow):
 
 
     def refresh(self):
-        if SECRET_CACHING:
-            self.fetch_secrets()
         self.refresh_objects()
 
 
@@ -306,10 +275,6 @@ class Login(QtGui.QDialog):
             keyring.set_password("vaultkee", str(parent.server_url), str(parent.token))
         else:
             config.save_config(parent.server_url, parent.listing_url, False)
-
-        # Load all our secrets
-        if SECRET_CACHING:
-            parent.fetch_secrets()
 
         # Populate our main window with data from the server.
         populate_path_tree(parent.pathTreeWidget,
