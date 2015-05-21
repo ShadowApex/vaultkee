@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 def get(url, endpoint, token):
     url = sanitize_url(url)
-    logger.debug("Fetching '%s'" % url + endpoint)
+    logger.debug("Fetching %s%s" % (url, endpoint))
     opener = urllib2.build_opener()
     opener.addheaders.append(('Cookie', 'token=' + token))
     f = opener.open(url + endpoint)
@@ -33,7 +33,7 @@ def sanitize_url(url):
 
 def get_mounts(url, token):
     endpoint = '/sys/mounts'
-    logger.debug("Fetching available mounts from '%s'" % str(url) + endpoint)
+    logger.debug("Fetching available mounts from '%s%s'" % (str(url), endpoint))
     contents = get(url, '/sys/mounts', token)
     return contents
 
@@ -49,7 +49,7 @@ def get_listings(url):
 
 def write_secret(url, token, path, data):
     url = sanitize_url(url)
-    logger.debug("Writing secret to '%s'" % url + path)
+    logger.debug("Writing secret to '%s%s'" % (url, path))
     r = requests.put(url + path, data=json.dumps(data), cookies={"token": token})
 
     if r.text:
@@ -61,7 +61,7 @@ def write_secret(url, token, path, data):
 
 def delete_secret(url, token, path):
     url = sanitize_url(url)
-    logger.debug("Deleting secret at '%s'" % url + path)
+    logger.debug("Deleting secret at '%s%s'" % (url, path))
     r = requests.delete(url + path, cookies={"token": token})
 
     print r.__dict__
@@ -69,7 +69,7 @@ def delete_secret(url, token, path):
 
 def read_secret(url, token, path):
     url = sanitize_url(url)
-    logger.debug("Reading secret from '%s'" % url + path)
+    logger.debug("Reading secret from '%s%s'" % (url, path))
     r = requests.get(url + path, cookies={"token": token})
 
     if r.text:
@@ -81,7 +81,7 @@ def read_secret(url, token, path):
 
 def lookup_self(url, token):
     endpoint = '/auth/token/lookup-self'
-    logger.debug("Looking up token: %s" % url + endpoint)
+    logger.debug("Looking up token: '%s%s'" % (url, endpoint))
     contents = get(url, endpoint, token)
     return contents
 

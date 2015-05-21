@@ -4,6 +4,7 @@ import sys
 import os
 import keyring
 import logging
+import traceback
 from pprint import pformat
 from PyQt4 import QtGui, uic
 from core import vault
@@ -74,7 +75,11 @@ class MainWindow(QtGui.QMainWindow):
         logger.info("Deleting selected secret: %s" % secret_path)
         try:
             vault.delete_secret(self.server_url, self.token, secret_path)
-        except Exception as e:
+        except Exception, e:
+            error_text = "ERROR: Could not delete the selected secret.\n"
+            error_text += traceback.format_exc()
+            self.error_dialog.textEdit.setText(error_text)
+            self.error_dialog.show()
             return e
         self.refresh()
 
@@ -93,7 +98,14 @@ class MainWindow(QtGui.QMainWindow):
 
         # Fetch data about the selected secret
         secret_name = self.get_secret_name_from_selection()
-        secret = self.fetch_secret(self.selected_path, secret_name)
+        try:
+            secret = self.fetch_secret(self.selected_path, secret_name)
+        except Exception, e:
+            error_text = "ERROR: Could not edit the selected secret."
+            error_text += traceback.format_exc()
+            self.error_dialog.textEdit.setText(error_text)
+            self.error_dialog.show()
+            return e            
 
         self.secret_dialog.populate_table(secret, self.selected_path, secret_name)
         self.secret_dialog.pathBox.setDisabled(1)
@@ -111,7 +123,13 @@ class MainWindow(QtGui.QMainWindow):
 
         # Fetch data about the selected secret
         secret_name = self.get_secret_name_from_selection()
-        secret = self.fetch_secret(self.selected_path, secret_name)
+        try:
+            secret = self.fetch_secret(self.selected_path, secret_name)
+        except Exception, e:
+            error_text = "ERROR: Could not update the secret viewer."
+            error_text += traceback.format_exc()
+            self.error_dialog.textEdit.setText(error_text)
+            return e
 
         try:
             property_name = str(secret_viewer.item(selected_row, 0).text())
@@ -133,7 +151,15 @@ class MainWindow(QtGui.QMainWindow):
         self.titleLabel.setText(secret_name)
 
         # Fetch data about the selected secret
-        secret = self.fetch_secret(self.selected_path, secret_name)
+        try:
+            secret = self.fetch_secret(self.selected_path, secret_name)
+        except Exception, e:
+            error_text = "ERROR: Could not update the secret viewer.\n"
+            error_text += traceback.format_exc()
+            self.error_dialog.textEdit.setText(error_text)
+            self.error_dialog.show()
+            return e
+
         if 'data' not in secret:
             return
 
@@ -168,7 +194,11 @@ class MainWindow(QtGui.QMainWindow):
         # Get all the items in this path from our listings dictionary
         try:
             self.listings = vault.get_listings(self.listing_url)
-        except Exception as e:
+        except Exception, e:
+            error_text = "ERROR: Could not update the secrets viewer.\n"
+            error_text += traceback.format_exc()
+            self.error_dialog.textEdit.setText(error_text)
+            self.error_dialog.show()
             return e
         objects = getFromDict(self.listings, self.selected_path[1:])
         if not objects:
@@ -256,9 +286,9 @@ class Login(QtGui.QDialog):
     def __init__(self, parent=None):
         super(Login, self).__init__(parent)
         uic.loadUi(BASEDIR + '/ui/login.ui', self)
-        self.vault_cache = config.load_cache()
         self.setWindowIcon(QtGui.QIcon(BASEDIR + '/resources/icon.png'))
         self.buttonBox.accepted.connect(self.ok_selected)
+        vault_cache = config.load_cache()
 
         # Load our settings if they were defined
         url_position = self.parent().config.getint('VaultKee', 'url')
@@ -266,16 +296,16 @@ class Login(QtGui.QDialog):
         saved = self.parent().config.getboolean('VaultKee', 'save')
 
         # Populate our URL boxes from our cached URLs
-        self.serverURLBox.addItems(self.vault_cache['vaults'])
-        self.listingURLBox.addItems(self.vault_cache['listings'])
+        self.serverURLBox.addItems(vault_cache['vaults'])
+        self.listingURLBox.addItems(vault_cache['listings'])
 
         # Set our default selections.
         self.serverURLBox.setCurrentIndex(url_position)
         self.listingURLBox.setCurrentIndex(listing_position)
 
         # Set our currently selected URLs to try and see if our token was saved.
-        url = self.vault_cache['vaults'][url_position]
-        listing_url = self.vault_cache['listings'][listing_position]
+        url = vault_cache['vaults'][url_position]
+        listing_url = vault_cache['listings'][listing_position]
 
         if url:
             token = keyring.get_password("vaultkee", url)
@@ -322,10 +352,16 @@ class Login(QtGui.QDialog):
         config.save_cache(server_urls, listing_urls, append=True)
 
         # Populate our main window with data from the server.
-        populate_path_tree(parent.pathTreeWidget,
-                           parent.listing_url,
-                           parent.server_url,
-                           parent.token)
+        error = populate_path_tree(parent.pathTreeWidget,
+                                   parent.listing_url,
+                                   parent.server_url,
+                                   parent.token)
+        if error:
+            error_text = "ERROR: Could not populate the path viewer.\n"
+            error_text += str(error)
+            parent.error_dialog.textEdit.setText(error_text)
+            parent.error_dialog.show()
+
         parent.secret_dialog.populate_paths()
 
 
@@ -381,7 +417,11 @@ class Secret(QtGui.QDialog):
         # Write our secret to the specified path
         try:
             vault.write_secret(parent.server_url, parent.token, save_path, data)
-        except Exception as e:
+        except Exception, e:
+            error_text = "ERROR: Could not save the selected secret.\n"
+            error_text += traceback.format_exc()
+            self.parent().error_dialog.textEdit.setText(error_text)
+            self.parent().error_dialog.show()
             return e
 
         # Update our tree view
@@ -422,9 +462,12 @@ class Secret(QtGui.QDialog):
     def populate_paths(self):
         parent = self.parent()
         try:
-            listings = vault.get_listings(parent.config.get('VaultKee',
-                                                            'listing_url'))
+            listings = vault.get_listings(parent.listing_url)
         except Exception as e:
+            error_text = "ERROR: Could not populate the paths viewer.\n"
+            error_text += traceback.format_exc()
+            self.parent().error_dialog.textEdit.setText(error_text)
+            self.parent().error_dialog.show()
             return e
 
         if not listings:
@@ -531,8 +574,8 @@ def populate_path_tree(path_tree, listing_url, server_url, token):
     try:
         listings = vault.get_listings(listing_url)
         mounts = vault.get_mounts(server_url, token)
-    except Exception as e:
-        return e
+    except Exception, e:
+        return traceback.format_exc()
     mounts_list = []
     for key in mounts:
         # Don't display the sys/ mount.
