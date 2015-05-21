@@ -1,14 +1,31 @@
 #!/usr/bin/python
 
 import sys
-from pprint import pprint
+import os
+import keyring
+import logging
+from pprint import pformat
 from PyQt4 import QtGui, uic
 from core import vault
 from core import config
-import os
-import keyring
 
 BASEDIR = os.path.dirname(os.path.realpath(sys.argv[0]))
+
+# Set up logging.
+logger_names = [__name__, "core.vault", "core.config"]
+loggers = {}
+for logger_name in logger_names:
+    logger = logging.getLogger(logger_name)
+    logger.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    log_hdlr = logging.StreamHandler(sys.stdout)
+    log_hdlr.setLevel(logging.DEBUG)
+    log_hdlr.setFormatter(formatter)
+    logger.addHandler(log_hdlr)
+    loggers[logger_name] = logger
+
+logger = loggers[__name__]
+
 
 class MainWindow(QtGui.QMainWindow):
     """The main window to display after connecting to a Vault server.
@@ -24,6 +41,7 @@ class MainWindow(QtGui.QMainWindow):
         self.config = config.load_config()
         self.login_dialog = Login(parent=self)
         self.secret_dialog = Secret(parent=self)
+        self.error_dialog = Error(parent=self)
         self.statusBar().showMessage('Ready')
 
         # Bind our actions such as exit, refresh, connect, etc.
@@ -43,7 +61,7 @@ class MainWindow(QtGui.QMainWindow):
         objectsModel = self.objectsViewer.selectionModel()
         objectsModel.selectionChanged.connect(self.update_object_viewer)
         self.objectsViewer.doubleClicked.connect(self.edit_secret)
-        self.objectsViewer.clicked.connect(self.update_object_viewer)
+        #self.objectsViewer.clicked.connect(self.update_object_viewer)
 
         # Handle our secret viewer being selected.
         self.secretTableWidget.doubleClicked.connect(self.update_secret_viewer_selection)
@@ -53,8 +71,11 @@ class MainWindow(QtGui.QMainWindow):
         secret_name = self.get_secret_name_from_selection()
         secret_path = join_path(self.selected_path, secret_name)
 
-        print "Deleting selected secret: %s" % secret_path
-        vault.delete_secret(self.server_url, self.token, secret_path)
+        logger.info("Deleting selected secret: %s" % secret_path)
+        try:
+            vault.delete_secret(self.server_url, self.token, secret_path)
+        except Exception as e:
+            return e
         self.refresh()
 
 
@@ -145,7 +166,10 @@ class MainWindow(QtGui.QMainWindow):
         self.path_tree_parents(path_tree.currentItem())
 
         # Get all the items in this path from our listings dictionary
-        self.listings = vault.get_listings(self.listing_url)
+        try:
+            self.listings = vault.get_listings(self.listing_url)
+        except Exception as e:
+            return e
         objects = getFromDict(self.listings, self.selected_path[1:])
         if not objects:
             return
@@ -232,23 +256,31 @@ class Login(QtGui.QDialog):
     def __init__(self, parent=None):
         super(Login, self).__init__(parent)
         uic.loadUi(BASEDIR + '/ui/login.ui', self)
+        self.vault_cache = config.load_cache()
         self.setWindowIcon(QtGui.QIcon(BASEDIR + '/resources/icon.png'))
         self.buttonBox.accepted.connect(self.ok_selected)
 
         # Load our settings if they were defined
-        url = self.parent().config.get('VaultKee', 'url')
-        listing_url = self.parent().config.get('VaultKee', 'listing_url')
+        url_position = self.parent().config.getint('VaultKee', 'url')
+        listing_position = self.parent().config.getint('VaultKee', 'listing_url')
         saved = self.parent().config.getboolean('VaultKee', 'save')
+
+        # Populate our URL boxes from our cached URLs
+        self.serverURLBox.addItems(self.vault_cache['vaults'])
+        self.listingURLBox.addItems(self.vault_cache['listings'])
+
+        # Set our default selections.
+        self.serverURLBox.setCurrentIndex(url_position)
+        self.listingURLBox.setCurrentIndex(listing_position)
+
+        # Set our currently selected URLs to try and see if our token was saved.
+        url = self.vault_cache['vaults'][url_position]
+        listing_url = self.vault_cache['listings'][listing_position]
 
         if url:
             token = keyring.get_password("vaultkee", url)
-            self.serverURLBox.addItems([url])
-            self.serverURLBox.setCurrentIndex(1)
         else:
             token = ""
-        if listing_url:
-            self.listingURLBox.addItems([listing_url])
-            self.listingURLBox.setCurrentIndex(1)
         if token:
             self.loginTokenBox.setText(token)
         if not saved:
@@ -271,10 +303,23 @@ class Login(QtGui.QDialog):
 
         # Save our settings if requested
         if self.saveLoginCheckbox.checkState() > 0:
-            config.save_config(parent.server_url, parent.listing_url, True)
-            keyring.set_password("vaultkee", str(parent.server_url), str(parent.token))
+            save_login = True
+            keyring.set_password("vaultkee",
+                                 str(parent.server_url),
+                                 str(parent.token))
         else:
-            config.save_config(parent.server_url, parent.listing_url, False)
+            save_login = False
+
+        config.save_config(self.serverURLBox.currentIndex(),
+                           self.listingURLBox.currentIndex(),
+                           save_login)
+
+        # Save our URLs to cache
+        server_urls = [str(self.serverURLBox.itemText(i)) for i in range(self.serverURLBox.count())]
+        listing_urls = [str(self.listingURLBox.itemText(i)) for i in range(self.listingURLBox.count())]
+        server_urls.append(str(parent.server_url))
+        listing_urls.append(str(parent.listing_url))
+        config.save_cache(server_urls, listing_urls, append=True)
 
         # Populate our main window with data from the server.
         populate_path_tree(parent.pathTreeWidget,
@@ -307,11 +352,10 @@ class Secret(QtGui.QDialog):
 
     def save_selected(self):
         parent = self.parent()
-        print "Save clicked!"
 
         # Only save if we validate our input
         if not self.valid_input():
-            print "Error, input is invalid"
+            logger.error("Input is invalid")
             return False
 
         # Format our data for saving
@@ -327,17 +371,18 @@ class Secret(QtGui.QDialog):
                 value = ""
             data[key] = value
 
-        pprint(data)
-
         # Get our path to save the data to
         secret_name = str(self.nameLineEdit.text())
         secret_path = str(self.pathBox.currentText())
 
         save_path = join_path([secret_path], secret_name)
-        print "Saving %s to %s." % (data, save_path)
+        logger.debug("Saving %s to %s." % (pformat(data), save_path))
 
         # Write our secret to the specified path
-        vault.write_secret(parent.server_url, parent.token, save_path, data)
+        try:
+            vault.write_secret(parent.server_url, parent.token, save_path, data)
+        except Exception as e:
+            return e
 
         # Update our tree view
         populate_path_tree(parent.pathTreeWidget,
@@ -376,10 +421,15 @@ class Secret(QtGui.QDialog):
 
     def populate_paths(self):
         parent = self.parent()
-        listings = vault.get_listings(parent.config.get('VaultKee',
-                                                        'listing_url'))
+        try:
+            listings = vault.get_listings(parent.config.get('VaultKee',
+                                                            'listing_url'))
+        except Exception as e:
+            return e
+
         if not listings:
-            return
+            return "No listings found"
+
         for key in listings:
             if listings[key]:
                 self.pathBox.addItems(['secret/' + key])
@@ -425,6 +475,19 @@ class Secret(QtGui.QDialog):
         self.nameLineEdit.setText(secret_name)
 
 
+class Error(QtGui.QDialog):
+    """The dialog used to show errors.
+
+    Args:
+      parent (QtGui.QMainWindow): Parent of this window.
+
+    """
+    def __init__(self, parent=None):
+        super(Error, self).__init__(parent)
+        uic.loadUi(BASEDIR + '/ui/error.ui', self)
+        self.setWindowIcon(QtGui.QIcon(BASEDIR + '/resources/icon.png'))
+
+
 def extract(dict_in, dict_out):
     for key, value in dict_in.iteritems():
         if isinstance(value, dict): # If value itself is dictionary
@@ -465,8 +528,11 @@ def populate_path_tree(path_tree, listing_url, server_url, token):
       token (str): Authentication token for vault server.
 
     """
-    listings = vault.get_listings(listing_url)
-    mounts = vault.get_mounts(server_url, token)
+    try:
+        listings = vault.get_listings(listing_url)
+        mounts = vault.get_mounts(server_url, token)
+    except Exception as e:
+        return e
     mounts_list = []
     for key in mounts:
         # Don't display the sys/ mount.

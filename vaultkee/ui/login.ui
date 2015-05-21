@@ -153,11 +153,6 @@
    <property name="editable">
     <bool>true</bool>
    </property>
-   <item>
-    <property name="text">
-     <string>https://vault.example.com:8200/v1/</string>
-    </property>
-   </item>
   </widget>
   <widget class="QCheckBox" name="saveLoginCheckbox">
    <property name="geometry">
@@ -203,11 +198,6 @@
    <property name="editable">
     <bool>true</bool>
    </property>
-   <item>
-    <property name="text">
-     <string>http://127.0.0.1:5000</string>
-    </property>
-   </item>
   </widget>
  </widget>
  <resources/>
