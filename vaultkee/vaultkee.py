@@ -392,6 +392,9 @@ class Secret(QtGui.QDialog):
         # Only save if we validate our input
         if not self.valid_input():
             logger.error("Input is invalid")
+            error_text = "ERROR: Invalid text in entry."
+            parent.error_dialog.textEdit.setText(error_text)
+            self.show()
             return False
 
         # Format our data for saving
@@ -416,13 +419,20 @@ class Secret(QtGui.QDialog):
 
         # Write our secret to the specified path
         try:
-            vault.write_secret(parent.server_url, parent.token, save_path, data)
+            response = vault.write_secret(parent.server_url, parent.token, save_path, data)
         except Exception, e:
             error_text = "ERROR: Could not save the selected secret.\n"
             error_text += traceback.format_exc()
             self.parent().error_dialog.textEdit.setText(error_text)
             self.parent().error_dialog.show()
             return e
+
+        if 'errors' in response and len(response['errors']) > 0:
+            error_text = "ERROR: Could not save the selected secret.\n"
+            error_text += pformat(response)
+            self.parent().error_dialog.textEdit.setText(error_text)
+            self.parent().error_dialog.show()
+            
 
         # Update our tree view
         populate_path_tree(parent.pathTreeWidget,

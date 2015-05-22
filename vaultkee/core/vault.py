@@ -64,7 +64,7 @@ def delete_secret(url, token, path):
     logger.debug("Deleting secret at '%s%s'" % (url, path))
     r = requests.delete(url + path, cookies={"token": token})
 
-    print r.__dict__
+    return r
 
 
 def read_secret(url, token, path):
