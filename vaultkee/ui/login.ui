@@ -199,6 +199,29 @@
     <bool>true</bool>
    </property>
   </widget>
+  <widget class="QToolButton" name="vaultButton">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>250</y>
+     <width>31</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="icon">
+    <iconset>
+     <normaloff>../resources/lock.png</normaloff>../resources/lock.png</iconset>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>24</width>
+     <height>24</height>
+    </size>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections>
