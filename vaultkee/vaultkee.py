@@ -62,7 +62,7 @@ class MainWindow(QtGui.QMainWindow):
         objectsModel = self.objectsViewer.selectionModel()
         objectsModel.selectionChanged.connect(self.update_object_viewer)
         self.objectsViewer.doubleClicked.connect(self.edit_secret)
-        #self.objectsViewer.clicked.connect(self.update_object_viewer)
+        self.objectsViewer.clicked.connect(self.update_object_viewer)
 
         # Handle our secret viewer being selected.
         self.secretTableWidget.doubleClicked.connect(self.update_secret_viewer_selection)
