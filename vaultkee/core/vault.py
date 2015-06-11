@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import urllib2
 import requests
 import json
 import logging
@@ -31,16 +30,7 @@ def get(url, token, endpoint, sanitize=True):
       Response data
 
     """
-    if sanitize:
-        url = sanitize_url(url)
-    logger.debug("Getting %s%s" % (url, endpoint))
-    opener = urllib2.build_opener()
-    opener.addheaders.append(('Cookie', 'token=' + token))
-    f = opener.open(url + endpoint)
-    contents = f.read()
-
-    data = json.loads(contents)
-    return data
+    return r_get(url, token, endpoint, sanitize)
 
 
 def r_get(url, token, endpoint, sanitize=True):
@@ -170,9 +160,12 @@ def get_listings(url):
 
     """
     logger.debug("Fetching list of secrets from '%s'" % str(url))
-    response = urllib2.urlopen(str(url))
-    contents = response.read()
-    data = json.loads(contents)
+    r = requests.get(url)
+
+    if r.text:
+        data = json.loads(r.text)
+    else:
+        data = ""
 
     return data
 
