@@ -58,3 +58,6 @@ target/
 
 # Gedit files
 *~
+
+# Mac OS X
+*.DS_Store

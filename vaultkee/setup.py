@@ -13,6 +13,7 @@ application_title = "VaultKee" #what you want to application to be called
 main_python_file = "vaultkee.py" #the name of the python file you use to run the program
 
 import sys
+import requests.certs
 
 from cx_Freeze import setup, Executable
 
@@ -20,17 +21,19 @@ base = None
 if sys.platform == "win32":
     base = "Win32GUI"
 
-includes = ["atexit","re","core","requests"]
-include_files = ['resources/add.png', 'resources/connect.png', 'resources/delete.png',
+includes = ["atexit","re","core","requests","requests.packages","keyring","keyring.backends.file","keyring.backends.Gnome","keyring.backends.OS_X",
+            "keyring.backends.Windows","keyring.backends._win_crypto","keyring.backends.keyczar","keyring.backends.multi",
+            "keyring.backends.Google","keyring.backends.SecretService","keyring.backends.pyfs","keyring.backends.kwallet"]
+include_files = ['cacert.pem','resources/add.png', 'resources/connect.png', 'resources/delete.png',
                  'resources/icon_128.png', 'resources/images.qrc', 'resources/refresh.png',
                  'resources/visible.png', 'resources/bg.png', 'resources/copy.png',
-                 'resources/exit.png', 'resources/icon_48.png', 'resources/key.png',
-                 'resources/save.png', 'ui/main.ui', 'ui/secret.ui', 'ui/login.ui']
+                 'resources/exit.png', 'resources/icon_48.png', 'resources/key.png', 'resources/lock.png',
+                 'resources/save.png', 'ui/main.ui', 'ui/secret.ui', 'ui/login.ui', 'ui/error.ui']
 
 setup(
         name = "VaultKee",
-        version = "0.1.2015.05.14",
+        version = "0.1.2015.06.10",
         description = "Open source graphical frontend to Vault",
         options = {"build_exe" : {"includes" : includes, 'include_files': include_files }},
-        executables = [Executable(main_python_file, base = base, icon="resources/icon_48.png")])
+        executables = [Executable(main_python_file, base = base)])
 

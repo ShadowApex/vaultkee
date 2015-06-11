@@ -3,9 +3,19 @@ import urllib2
 import requests
 import json
 import logging
+import os
 
 # Set up logging
 logger = logging.getLogger(__name__)
+
+# Get the path of our cacert.pem file for verifying SSL
+module_path = os.path.dirname(os.path.realpath(__file__))
+cert_locations = [os.path.realpath(os.path.join(module_path, "..")),
+                  os.path.realpath(os.path.join(os.path.join(module_path, ".."), ".."))]
+for cert_dir in cert_locations:
+    cert_file = os.path.join(cert_dir, "cacert.pem")
+    if os.path.isfile(cert_file):
+        os.environ["REQUESTS_CA_BUNDLE"] = cert_file
 
 def get(url, token, endpoint, sanitize=True):
     """Perform a GET request with the 'urllib2' library.
@@ -76,8 +86,8 @@ def put(url, token, path, data, sanitize=True):
     """
     if sanitize:
         url = sanitize_url(url)
-    logger.debug("Putting '%s%s'" % (url, endpoint))
-    r = requests.put(url + endpoint, data=json.dumps(data), cookies={"token": token})
+    logger.debug("Putting '%s%s'" % (url, path))
+    r = requests.put(url + path, data=json.dumps(data), cookies={"token": token})
 
     if r.text:
         data = json.loads(r.text)
