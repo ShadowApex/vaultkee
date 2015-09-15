@@ -33,6 +33,8 @@ perform the following steps to run VaultKee from source:
 
 `sudo pip install requests`
 
+`sudo pip install keyring`
+
 `brew install qt sip pyqt`
 
 `cd vaultkee/vaultkee`
@@ -48,6 +50,8 @@ perform the following steps to run VaultKee from source:
 `sudo easy_install pip`
 
 `sudo pip install requests`
+
+`sudo pip install keyring`
 
 `brew install qt sip pyqt`
 
