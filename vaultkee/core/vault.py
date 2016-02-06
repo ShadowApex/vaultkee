@@ -50,7 +50,7 @@ def r_get(url, token, endpoint, sanitize=True):
     if sanitize:
         url = sanitize_url(url)
     logger.debug("Getting '%s%s'" % (url, endpoint))
-    r = requests.get(url + endpoint, cookies={"token": token})
+    r = requests.get(url + endpoint, headers={'X-Vault-Token': token})
 
     if r.text:
         data = json.loads(r.text)
@@ -77,7 +77,7 @@ def put(url, token, path, data, sanitize=True):
     if sanitize:
         url = sanitize_url(url)
     logger.debug("Putting '%s%s'" % (url, path))
-    r = requests.put(url + path, data=json.dumps(data), cookies={"token": token})
+    r = requests.put(url + path, data=json.dumps(data), headers={'X-Vault-Token': token})
 
     if r.text:
         data = json.loads(r.text)
@@ -103,7 +103,7 @@ def delete(url, token, path, sanitize=True):
     if sanitize:
         url = sanitize_url(url)
     logger.debug("Deleting '%s%s'" % (url, path))
-    r = requests.delete(url + path, cookies={"token": token})
+    r = requests.delete(url + path, headers={'X-Vault-Token': token})
 
     if r.text:
         data = json.loads(r.text)
